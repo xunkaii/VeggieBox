@@ -1,0 +1,103 @@
+package vgbox.vgboxController;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import vgbox.vgboxDB.VO.Member;
+import vgbox.vgboxDB.VO.Seller;
+import vgbox.vgboxService.MemberService;
+
+@Controller
+public class MemberController {
+	@Autowired
+	public MemberService service;
+	
+	@RequestMapping("main.do")
+	public String main() {
+	        return "WEB-INF/vgbox_views/jsp/main.jsp";
+	}
+
+	    
+	@RequestMapping("checkId.do")
+	@ResponseBody
+	public String checkId(@RequestParam(value = "choice", defaultValue = "") String choice,
+	                       @RequestParam(value = "id", defaultValue = "") String id) {
+	    
+	    String checkid = "";
+	    
+	    if (choice.equals("user")) {
+	        checkid = service.checkID("user", id);
+	    } else if (choice.equals("seller")) {
+	        checkid = service.checkID("seller", id);
+	    }
+	    
+	    return checkid;
+	}
+	    
+	 // http://localhost:5020/project/memReg.do
+	 // 회원가입
+	    @RequestMapping("memReg.do")
+	    public String memReg(@RequestParam(value = "choice", defaultValue = "") String choice, Member m, Seller s, Model d) {
+	        
+	        d.addAttribute("regYN", service.join(choice, m, s));
+     
+	       return "WEB-INF\\views\\login_join\\register.jsp";
+	    }
+	    
+	    // http://localhost:5020/project/loginPage.do
+	    @RequestMapping("loginPage.do")
+	    public String loginPage() {
+	    	return "WEB-INF\\views\\login_join\\login.jsp";
+	    }
+	    
+	    
+	    // 로그인 기능
+	    @ResponseBody
+	    @RequestMapping("login.do")
+	    public Map<String, String> memLogin(HttpServletRequest request, @RequestParam(value = "choice", defaultValue = "") String choice, 
+	                            @RequestParam(value="id", defaultValue="") String id,
+	                            @RequestParam(value="password",defaultValue="") String password) {
+	        
+	        HttpSession session = request.getSession();
+	        Map<String, String> response = new HashMap<>();
+	        
+	        if(choice.equals("user")) {
+	            Member mvo = service.login(id, password);
+	            if(mvo != null) {
+	                session.setAttribute("loginSession", mvo);
+	                session.setMaxInactiveInterval(1800);
+	                response.put("status", "success");
+	                return response;
+	            }
+	        } else if(choice.equals("seller")) {
+	            Seller svo = service.loginS(id, password);
+	            if(svo != null) {
+	                session.setAttribute("loginSession", svo);
+	                session.setMaxInactiveInterval(1800);
+	                response.put("status", "success");
+	                return response;
+	            }
+	        }
+	        
+	        response.put("status", "failure");
+	        return response;
+	    }
+	    
+	    // 로그아웃
+	    
+}
+
+	
+
+
+		
